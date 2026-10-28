@@ -17,7 +17,7 @@ export default async function IndicePage() {
   return (
     <div className="space-y-10">
       <Capa compacta>
-        <p className="caixa mt-3 text-xs tracking-[0.2em]">
+        <p className="caixa text-xs tracking-[0.2em]">
           {total === 0 ? "Um livro novinho, esperando a primeira receita" : `${total} ${total === 1 ? "receita" : "receitas"}`}
         </p>
       </Capa>
