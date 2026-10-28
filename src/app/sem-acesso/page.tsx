@@ -11,8 +11,8 @@ export default async function SemAcessoPage() {
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-10">
-      <div className="folha w-full max-w-md rounded-2xl border border-borda p-8 text-center shadow-sm">
-        <h1 className="font-titulo text-3xl font-semibold">Este livro é só da família</h1>
+      <div className="bg-papel-claro w-full max-w-md rounded-2xl border border-borda p-8 text-center shadow-sm">
+        <h1 className="caixa text-2xl text-salgado">Este livro é só da família</h1>
         <p className="mt-4 text-tinta-suave">
           {email ? (
             <>

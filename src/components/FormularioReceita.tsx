@@ -97,7 +97,7 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
     <form onSubmit={enviar} className="space-y-6">
       <div>
         <label htmlFor="titulo" className={rotulo}>Nome da receita</label>
-        <input id="titulo" name="titulo" required defaultValue={receita?.titulo} placeholder="Ex.: Carbonara do vô" className="campo font-titulo text-lg" />
+        <input id="titulo" name="titulo" required defaultValue={receita?.titulo} placeholder="Ex.: Carbonara do vô" className="campo text-lg font-semibold" />
       </div>
 
       <fieldset>
@@ -106,7 +106,7 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
           {(Object.keys(SECOES) as Secao[]).map((opcao) => (
             <label key={opcao} className="cursor-pointer">
               <input type="radio" name="secao" value={opcao} checked={secao === opcao} onChange={() => setSecao(opcao)} className="peer sr-only" />
-              <span className={`block rounded-lg border-2 border-borda bg-papel-claro py-2.5 text-center font-titulo text-lg font-semibold transition peer-focus-visible:ring-2 peer-focus-visible:ring-dourado ${corSecao[opcao]}`}>
+              <span className={`block rounded-lg border-2 border-borda bg-papel-claro py-2.5 text-center caixa text-sm transition peer-focus-visible:ring-2 peer-focus-visible:ring-dourado ${corSecao[opcao]}`}>
                 {SECOES[opcao].nome}
               </span>
             </label>
