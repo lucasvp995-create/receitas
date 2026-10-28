@@ -148,11 +148,17 @@ function Ilustracao({ className }: { className?: string }) {
         ))}
       </g>
 
-      {/* texto na panela */}
-      <g fill={TINTA} textAnchor="middle" fontWeight="700" fontSize="25" letterSpacing="1.5" style={{ fontFamily: "var(--font-jost)" }}>
-        <text x="200" y="384">SALGADOS,</text>
-        <text x="200" y="416">DOCES</text>
-        <text x="200" y="448">&amp; BEBIDAS</text>
+      {/* texto na panela: o que a família diz quando vê uma foto de comida */}
+      <g fill={TINTA} textAnchor="middle" style={{ fontFamily: "var(--font-jost)" }}>
+        <text x="200" y="402" fontSize="33" fontWeight="800" letterSpacing="0.5">
+          AMASSAVA!
+        </text>
+        <text x="200" y="430" fontSize="12" fontWeight="700" letterSpacing="2.5">
+          SALGADOS, DOCES
+        </text>
+        <text x="200" y="448" fontSize="12" fontWeight="700" letterSpacing="2.5">
+          &amp; BEBIDAS
+        </text>
       </g>
     </svg>
   );
