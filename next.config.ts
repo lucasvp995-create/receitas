@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
+  experimental: {
+    // Fotos de receitas para a importação por IA vão direto para a ação do servidor.
+    serverActions: { bodySizeLimit: "8mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {

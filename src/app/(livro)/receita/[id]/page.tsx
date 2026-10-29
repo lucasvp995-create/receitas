@@ -65,8 +65,7 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
         </p>
 
         <section className="mt-10" aria-label="Ingredientes">
-          <h2 className={`caixa mb-3 text-xs ${cor}`}>Ingredientes</h2>
-          <ListaIngredientes ingredientes={receita.ingredientes} secao={receita.secao} />
+          <ListaIngredientes ingredientes={receita.ingredientes} secao={receita.secao} porcoes={receita.porcoes} />
         </section>
 
         <section className="mt-10 border-t border-borda pt-8" aria-label="Modo de preparo">

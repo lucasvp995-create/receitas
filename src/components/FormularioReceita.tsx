@@ -3,34 +3,24 @@
 import Image from "next/image";
 import { useState, useTransition } from "react";
 import { criarReceita, editarReceita, type DadosReceita } from "@/lib/acoes";
-import { CATEGORIAS, DIFICULDADES, PAISES, SECOES, type Receita, type Secao } from "@/lib/livro";
+import { CATEGORIAS, DIFICULDADES, PAISES, SECOES, type Rascunho, type Receita, type Secao } from "@/lib/livro";
+import { reduzirFoto } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   membroId: string;
   receita?: Receita;
+  // Receita lida pela IA, para revisar antes de guardar.
+  rascunho?: Rascunho;
   secaoInicial?: Secao;
+  aoCancelar?: () => void;
 };
 
-const LADO_MAXIMO = 1600;
-
-// Fotos de celular têm vários MB: reduzimos no aparelho antes de enviar.
-async function reduzirFoto(arquivo: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(arquivo);
-  const escala = Math.min(1, LADO_MAXIMO / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * escala);
-  canvas.height = Math.round(bitmap.height * escala);
-  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("foto"))), "image/jpeg", 0.85),
-  );
-}
-
-export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
-  const [secao, setSecao] = useState<Secao>(receita?.secao ?? secaoInicial ?? "salgado");
+export function FormularioReceita({ membroId, receita, rascunho, secaoInicial, aoCancelar }: Props) {
+  const inicial = receita ?? rascunho;
+  const [secao, setSecao] = useState<Secao>(inicial?.secao ?? secaoInicial ?? "salgado");
   const [foto, setFoto] = useState<File | null>(null);
-  const [previa, setPrevia] = useState<string | null>(receita?.foto_capa ?? null);
+  const [previa, setPrevia] = useState<string | null>(inicial?.foto_capa ?? null);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, iniciar] = useTransition();
 
@@ -83,6 +73,7 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
         dicas: campo("dicas"),
         fonte_url: campo("fonte_url"),
         foto_capa: fotoCapa,
+        origem: rascunho?.origem,
       };
       const resultado = receita ? await editarReceita(receita.id, dados) : await criarReceita(dados);
       if (resultado?.erro) setErro(resultado.erro);
@@ -97,7 +88,7 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
     <form onSubmit={enviar} className="space-y-6">
       <div>
         <label htmlFor="titulo" className={rotulo}>Nome da receita</label>
-        <input id="titulo" name="titulo" required defaultValue={receita?.titulo} placeholder="Ex.: Carbonara do vô" className="campo text-lg font-semibold" />
+        <input id="titulo" name="titulo" required defaultValue={inicial?.titulo} placeholder="Ex.: Carbonara do vô" className="campo text-lg font-semibold" />
       </div>
 
       <fieldset>
@@ -117,14 +108,14 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="pais" className={rotulo}>País de origem</label>
-          <input id="pais" name="pais" list="lista-paises" defaultValue={receita?.pais ?? "Brasil"} className="campo" />
+          <input id="pais" name="pais" list="lista-paises" defaultValue={inicial?.pais ?? "Brasil"} className="campo" />
           <datalist id="lista-paises">
             {PAISES.map((pais) => <option key={pais} value={pais} />)}
           </datalist>
         </div>
         <div>
           <label htmlFor="categoria" className={rotulo}>Tipo de prato <span className="font-normal text-tinta-suave">(opcional)</span></label>
-          <input id="categoria" name="categoria" list="lista-categorias" defaultValue={receita?.categoria ?? ""} placeholder="Ex.: Massa, Bolo, Drink" className="campo" />
+          <input id="categoria" name="categoria" list="lista-categorias" defaultValue={inicial?.categoria ?? ""} placeholder="Ex.: Massa, Bolo, Drink" className="campo" />
           <datalist id="lista-categorias">
             {CATEGORIAS.map((categoria) => <option key={categoria} value={categoria} />)}
           </datalist>
@@ -133,21 +124,21 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
 
       <div>
         <label htmlFor="descricao" className={rotulo}>Uma frase sobre ela <span className="font-normal text-tinta-suave">(opcional)</span></label>
-        <input id="descricao" name="descricao" defaultValue={receita?.descricao ?? ""} placeholder="Ex.: Cremosa, sem creme de leite, como em Roma." className="campo" />
+        <input id="descricao" name="descricao" defaultValue={inicial?.descricao ?? ""} placeholder="Ex.: Cremosa, sem creme de leite, como em Roma." className="campo" />
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div>
           <label htmlFor="tempo_minutos" className={rotulo}>Tempo (min)</label>
-          <input id="tempo_minutos" name="tempo_minutos" type="number" inputMode="numeric" min={1} defaultValue={receita?.tempo_minutos ?? ""} className="campo" />
+          <input id="tempo_minutos" name="tempo_minutos" type="number" inputMode="numeric" min={1} defaultValue={inicial?.tempo_minutos ?? ""} className="campo" />
         </div>
         <div>
           <label htmlFor="porcoes" className={rotulo}>Porções</label>
-          <input id="porcoes" name="porcoes" type="number" inputMode="numeric" min={1} defaultValue={receita?.porcoes ?? ""} className="campo" />
+          <input id="porcoes" name="porcoes" type="number" inputMode="numeric" min={1} defaultValue={inicial?.porcoes ?? ""} className="campo" />
         </div>
         <div className="col-span-2 sm:col-span-1">
           <label htmlFor="dificuldade" className={rotulo}>Dificuldade</label>
-          <select id="dificuldade" name="dificuldade" defaultValue={receita?.dificuldade ?? ""} className="campo">
+          <select id="dificuldade" name="dificuldade" defaultValue={inicial?.dificuldade ?? ""} className="campo">
             <option value="">—</option>
             {Object.entries(DIFICULDADES).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}
           </select>
@@ -156,19 +147,19 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
 
       <div>
         <label htmlFor="ingredientes" className={rotulo}>Ingredientes</label>
-        <textarea id="ingredientes" name="ingredientes" required rows={8} defaultValue={receita?.ingredientes.join("\n")} placeholder={"400 g de espaguete\n150 g de guanciale\n4 gemas\nPara finalizar:\nPecorino ralado a gosto"} className="campo leading-relaxed" />
+        <textarea id="ingredientes" name="ingredientes" required rows={8} defaultValue={inicial?.ingredientes.join("\n")} placeholder={"400 g de espaguete\n150 g de guanciale\n4 gemas\nPara finalizar:\nPecorino ralado a gosto"} className="campo leading-relaxed" />
         <p className={ajuda}>Um ingrediente por linha. Termine uma linha com “:” para criar um subtítulo, como “Para o molho:”.</p>
       </div>
 
       <div>
         <label htmlFor="passos" className={rotulo}>Modo de preparo</label>
-        <textarea id="passos" name="passos" required rows={8} defaultValue={receita?.passos.join("\n")} placeholder={"Cozinhe a massa em água com sal.\nDoure o guanciale na frigideira.\nMisture tudo fora do fogo com as gemas."} className="campo leading-relaxed" />
+        <textarea id="passos" name="passos" required rows={8} defaultValue={inicial?.passos.join("\n")} placeholder={"Cozinhe a massa em água com sal.\nDoure o guanciale na frigideira.\nMisture tudo fora do fogo com as gemas."} className="campo leading-relaxed" />
         <p className={ajuda}>Um passo por linha. O livro numera sozinho.</p>
       </div>
 
       <div>
         <label htmlFor="dicas" className={rotulo}>Dicas <span className="font-normal text-tinta-suave">(opcional)</span></label>
-        <textarea id="dicas" name="dicas" rows={3} defaultValue={receita?.dicas ?? ""} placeholder="Segredos, substituições, como servir…" className="campo leading-relaxed" />
+        <textarea id="dicas" name="dicas" rows={3} defaultValue={inicial?.dicas ?? ""} placeholder="Segredos, substituições, como servir…" className="campo leading-relaxed" />
       </div>
 
       <div>
@@ -191,7 +182,7 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
 
       <div>
         <label htmlFor="fonte_url" className={rotulo}>De onde veio? <span className="font-normal text-tinta-suave">(link, opcional)</span></label>
-        <input id="fonte_url" name="fonte_url" type="url" inputMode="url" defaultValue={receita?.fonte_url ?? ""} placeholder="https://…" className="campo" />
+        <input id="fonte_url" name="fonte_url" type="url" inputMode="url" defaultValue={inicial?.fonte_url ?? ""} placeholder="https://…" className="campo" />
       </div>
 
       {erro && <p role="alert" className="rounded-lg bg-salgado/10 px-4 py-3 text-salgado">{erro}</p>}
@@ -200,7 +191,7 @@ export function FormularioReceita({ membroId, receita, secaoInicial }: Props) {
         <button disabled={salvando} className="rounded-full bg-capa px-6 py-3 font-semibold text-papel hover:bg-capa-escura disabled:opacity-60">
           {salvando ? "Salvando…" : receita ? "Salvar alterações" : "Guardar no livro"}
         </button>
-        <button type="button" onClick={() => history.back()} className="rounded-full px-4 py-3 text-tinta-suave hover:bg-papel-escuro">
+        <button type="button" onClick={aoCancelar ?? (() => history.back())} className="rounded-full px-4 py-3 text-tinta-suave hover:bg-papel-escuro">
           Cancelar
         </button>
       </div>
