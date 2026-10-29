@@ -47,6 +47,9 @@ export type Receita = {
   autor?: { nome: string; avatar_url: string | null } | null;
 };
 
+// Uma receita ainda não salva, como a que a importação devolve para revisão.
+export type Rascunho = Omit<Receita, "id" | "autor_id" | "criado_em" | "autor">;
+
 export type ResumoReceita = Pick<
   Receita,
   "id" | "titulo" | "secao" | "pais" | "categoria" | "tempo_minutos" | "foto_capa"

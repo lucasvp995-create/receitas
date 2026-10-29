@@ -1,10 +1,12 @@
 "use server";
 
+import Anthropic from "@anthropic-ai/sdk";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getMembro } from "@/lib/dados";
 import { createClient } from "@/lib/supabase/server";
-import { DIFICULDADES, eSecao } from "@/lib/livro";
+import { ErroImportacao, lerReceita, type Entrada } from "@/lib/importar";
+import { DIFICULDADES, eSecao, type Rascunho } from "@/lib/livro";
 
 export type DadosReceita = {
   titulo: string;
@@ -20,6 +22,7 @@ export type DadosReceita = {
   dicas: string;
   fonte_url: string;
   foto_capa: string | null;
+  origem?: string;
 };
 
 export type ResultadoSalvar = { erro: string } | undefined;
@@ -85,7 +88,11 @@ export async function criarReceita(dados: DadosReceita): Promise<ResultadoSalvar
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("receitas")
-    .insert({ ...validado.receita, autor_id: membro.id })
+    .insert({
+      ...validado.receita,
+      autor_id: membro.id,
+      origem: dados.origem === "importada" ? "importada" : "familia",
+    })
     .select("id")
     .single();
   if (error || !data) return { erro: "Não consegui salvar. Tente de novo." };
@@ -109,6 +116,25 @@ export async function editarReceita(id: string, dados: DadosReceita): Promise<Re
 
   revalidatePath("/", "layout");
   redirect(`/receita/${id}`);
+}
+
+export type ResultadoImportar = { erro: string } | { rascunho: Rascunho };
+
+export async function importarReceita(entrada: Entrada): Promise<ResultadoImportar> {
+  await getMembro();
+  try {
+    return { rascunho: await lerReceita(entrada) };
+  } catch (erro) {
+    if (erro instanceof ErroImportacao) return { erro: erro.message };
+    console.error("importar receita", erro);
+    if (erro instanceof Anthropic.AuthenticationError) {
+      return { erro: "A leitura por IA ainda não está configurada (falta a chave ANTHROPIC_API_KEY)." };
+    }
+    if (erro instanceof Anthropic.RateLimitError || erro instanceof Anthropic.InternalServerError) {
+      return { erro: "A IA está ocupada agora. Tente de novo em um minuto." };
+    }
+    return { erro: "Algo deu errado ao ler a receita. Tente de novo." };
+  }
 }
 
 export async function apagarReceita(id: string) {

@@ -2,7 +2,7 @@
 
 O livro de receitas da família: Salgado, Doce e Bebidas, organizado por país, com login pelo Google só para quem foi convidado.
 
-Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, photo storage) and hosted on Vercel. All three have free tiers that cover a family.
+Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, photo storage) and hosted on Vercel. All three have free tiers that cover a family. Recipe import uses the Claude API, which is pay-as-you-go (a few cents per imported recipe).
 
 ## What's in phase 1
 
@@ -12,6 +12,11 @@ Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, 
 - Add and edit recipes by hand, with a cover photo (resized on the phone before upload)
 - Search by name, ingredient or country, ignoring accents ("acucar" finds "açúcar")
 - Google login; only invited e-mails get in, and only the author can edit or delete a recipe
+
+## What's in phase 2
+
+- **Import with AI** (`/importar`): paste a recipe link (any blog, any language), a YouTube video, up to 4 photos of a cookbook or handwritten page, or pasted text such as an Instagram caption. Claude rewrites it in Brazilian Portuguese with metric units, picks the chapter and country, and you review everything in the normal form before saving. Imported recipes are marked "Importada" and keep the source link.
+- **Adjust servings** on every recipe page: − / + recalculates the ingredient quantities (fractions like ½ included). Recipes without a serving count scale by half, double, triple…
 
 ## Setup (one time, about 20 minutes)
 
@@ -41,7 +46,8 @@ Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, 
 ### 3. Vercel
 
 1. At [vercel.com](https://vercel.com) choose **Add New → Project** and import this GitHub repository.
-2. Add the environment variables `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with the values from step 1.4, then deploy.
+2. Add the environment variables `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with the values from step 1.4, plus `ANTHROPIC_API_KEY` for the AI import (create one at [platform.claude.com](https://platform.claude.com) → API Keys and add a little credit; setting a monthly spend limit there is a good idea). Then deploy.
+   - Optional: `YOUTUBE_API_KEY` (Google Cloud → enable **YouTube Data API v3** → Credentials → API key, free). YouTube sometimes refuses to show video pages to servers; with this key the import can still read the video description, which is where most cooks write the recipe.
 3. Back in Supabase, **Authentication → URL Configuration**: set **Site URL** to your Vercel address (for example `https://receitas-vidal.vercel.app`) and add `https://receitas-vidal.vercel.app/auth/callback` to **Redirect URLs**.
 
 ### 4. On the phones
@@ -52,7 +58,7 @@ Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, 
 ## Running locally
 
 ```bash
-cp .env.example .env.local   # fill in the two Supabase values
+cp .env.example .env.local   # fill in the Supabase values and the Anthropic key
 npm install
 npm run dev
 ```
@@ -66,13 +72,14 @@ Add `http://localhost:3000/auth/callback` to Supabase's Redirect URLs to log in 
 | `supabase/migrations/` | Tables, search trigger, invite check and access rules |
 | `src/lib/livro.ts` | Sections, countries and flags, recipe types |
 | `src/lib/dados.ts` | Reading from the database (server only) |
-| `src/lib/acoes.ts` | Saving, editing, deleting, signing out |
+| `src/lib/acoes.ts` | Saving, editing, deleting, importing, signing out |
+| `src/lib/importar.ts` | Reads a site, YouTube video, photos or text and asks Claude for the recipe in the book's format |
+| `src/lib/porcoes.ts` | Scales ingredient quantities for the servings adjuster |
 | `src/app/(livro)/` | The book's pages: index, chapter, recipe, new, edit, search |
 | `src/app/login`, `src/app/auth/callback` | Google login and the invite check |
 | `src/proxy.ts` | Keeps the session fresh and sends logged-out visitors to `/login` |
 
 ## Next phases
 
-2. AI import from a link, a YouTube video or a photo of a cookbook, saved in Portuguese
 3. Family: "minha versão" photos, likes, comments, favorites
 4. Recipe suggestions, Instagram/TikTok import, shopping list, print the book
