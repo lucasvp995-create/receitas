@@ -8,7 +8,7 @@ export default async function LivroLayout({ children }: LayoutProps<"/">) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 border-b border-borda/80 bg-papel/90 backdrop-blur">
+      <header className="sticky top-0 z-20 print:hidden border-b border-borda/80 bg-papel/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4">
           <Link href="/" className="flex items-baseline gap-2 text-tinta">
             <span className="font-display text-2xl font-black" style={{ fontVariationSettings: '"SOFT" 100' }}>Receitas</span>
@@ -46,6 +46,15 @@ export default async function LivroLayout({ children }: LayoutProps<"/">) {
                 <Link href="/importar" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
                   Importar receita
                 </Link>
+                <Link href="/sugestoes" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
+                  Sugestões da IA
+                </Link>
+                <Link href="/compras" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
+                  Lista de compras
+                </Link>
+                <Link href="/imprimir" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
+                  Imprimir o livro
+                </Link>
                 <form action={sair}>
                   <button className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
                     Sair
@@ -56,7 +65,7 @@ export default async function LivroLayout({ children }: LayoutProps<"/">) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-6">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-6 print:max-w-none print:p-0">{children}</main>
     </>
   );
 }

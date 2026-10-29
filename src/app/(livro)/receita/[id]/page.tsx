@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BotaoAmassava } from "@/components/BotaoAmassava";
 import { BotaoApagar } from "@/components/BotaoApagar";
 import { BotaoFavorito } from "@/components/BotaoFavorito";
+import { BotaoImprimir } from "@/components/BotaoImprimir";
 import { ConversaDaReceita, NaCozinhaDaFamilia, nomesDe } from "@/components/Familia";
 import { ListaIngredientes } from "@/components/ListaIngredientes";
 import { getFamiliaDaReceita, getMembro, getReceita } from "@/lib/dados";
@@ -52,7 +53,7 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
 
   return (
     <>
-    <article className="mx-auto max-w-4xl overflow-hidden rounded-md border border-borda bg-papel-claro shadow-[0_10px_30px_-18px_rgb(43_45_62/0.35)]">
+    <article className="mx-auto max-w-4xl overflow-hidden rounded-md border border-borda bg-papel-claro shadow-[0_10px_30px_-18px_rgb(43_45_62/0.35)] print:border-0 print:shadow-none">
       {receita.foto_capa && (
         <div className="relative aspect-[16/10] sm:aspect-[16/8]">
           <Image src={receita.foto_capa} alt={receita.titulo} fill priority sizes="(min-width: 896px) 896px, 100vw" className="object-cover" />
@@ -68,13 +69,13 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
         <p className="caixa mt-4 text-center text-xs text-tinta-suave">
           {detalhes.join("  ·  ")}
         </p>
-        <div className="mt-5 flex flex-col items-center gap-3">
+        <div className="mt-5 flex flex-col items-center gap-3 print:hidden">
           <BotaoAmassava receitaId={receita.id} alvo={{ receita_id: receita.id }} nomes={amassaram.outros} eu={amassaram.eu} />
           <BotaoFavorito receitaId={receita.id} favorito={familia.favorito} />
         </div>
 
         <section className="mt-10" aria-label="Ingredientes">
-          <ListaIngredientes ingredientes={receita.ingredientes} secao={receita.secao} porcoes={receita.porcoes} />
+          <ListaIngredientes ingredientes={receita.ingredientes} secao={receita.secao} porcoes={receita.porcoes} receitaId={receita.id} titulo={receita.titulo} />
         </section>
 
         <section className="mt-10 border-t border-borda pt-8" aria-label="Modo de preparo">
@@ -114,8 +115,9 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
                 Ver a fonte original
               </a>
             )}
+            <BotaoImprimir className="rounded-full px-3 py-1.5 text-tinta hover:bg-papel-escuro sm:ml-auto" />
             {receita.autor_id === membro.id && (
-              <span className="ml-auto flex items-center gap-1">
+              <span className="flex items-center gap-1 print:hidden">
                 <Link href={`/receita/${receita.id}/editar`} className="rounded-full px-3 py-1.5 text-tinta hover:bg-papel-escuro">
                   Editar
                 </Link>
@@ -127,8 +129,10 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
       </div>
     </article>
 
+    <div className="print:hidden">
     <NaCozinhaDaFamilia receitaId={receita.id} membro={membro} versoes={familia.versoes} />
     <ConversaDaReceita receitaId={receita.id} membroId={membro.id} comentarios={familia.comentarios} />
+    </div>
     </>
   );
 }

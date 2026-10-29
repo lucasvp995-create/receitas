@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import { porNaLista } from "@/lib/acoes";
 import { eSubtitulo } from "@/lib/livro";
 import { escalarLinha, formatarQuantidade } from "@/lib/porcoes";
 
@@ -14,11 +16,17 @@ export function ListaIngredientes({
   ingredientes,
   secao,
   porcoes,
+  receitaId,
+  titulo,
 }: {
   ingredientes: string[];
   secao: keyof typeof COR;
   porcoes: number | null;
+  receitaId: string;
+  titulo: string;
 }) {
+  const [naLista, setNaLista] = useState(false);
+  const [pondo, iniciar] = useTransition();
   const [riscados, setRiscados] = useState<Set<number>>(new Set());
   const [pessoas, setPessoas] = useState(porcoes ?? 1);
   const [multiplo, setMultiplo] = useState(1);
@@ -47,7 +55,7 @@ export function ListaIngredientes({
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className={`caixa text-xs ${COR[secao]}`}>Ingredientes</h2>
-        <div className="flex items-center gap-2" role="group" aria-label="Ajustar porções">
+        <div className="flex items-center gap-2 print:hidden" role="group" aria-label="Ajustar porções">
           <button type="button" onClick={() => passo(-1)} disabled={!podeMenos} className={botao} aria-label="Menos">−</button>
           <span className="caixa min-w-28 text-center text-xs" aria-live="polite">{rotulo}</span>
           <button type="button" onClick={() => passo(1)} disabled={!podeMais} className={botao} aria-label="Mais">+</button>
@@ -86,8 +94,40 @@ export function ListaIngredientes({
         )}
       </ul>
 
+      <div className="mt-5 flex flex-wrap items-center gap-3 print:hidden">
+        {naLista ? (
+          <p className="text-sm">
+            Ingredientes na sua lista de compras.{" "}
+            <Link href="/compras" className="font-semibold underline">Ver lista →</Link>
+          </p>
+        ) : (
+          <button
+            type="button"
+            disabled={pondo}
+            onClick={() =>
+              iniciar(async () => {
+                const linhas = ingredientes
+                  .filter((linha) => !eSubtitulo(linha))
+                  .map((linha) => escalarLinha(linha, fator).map((pedaco) => pedaco.texto).join(""));
+                const rotuloTitulo = fator === 1 ? titulo : `${titulo} (${rotulo.toLowerCase()})`;
+                await porNaLista(receitaId, rotuloTitulo, linhas);
+                setNaLista(true);
+              })
+            }
+            className="caixa flex items-center gap-2 rounded-full border border-borda px-4 py-2 text-xs text-tinta-suave hover:border-tinta-suave hover:text-tinta disabled:opacity-50"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M3 4h2l2.4 11h11l2-8H6.2" strokeLinejoin="round" strokeLinecap="round" />
+              <circle cx="9" cy="19.5" r="1.5" />
+              <circle cx="17" cy="19.5" r="1.5" />
+            </svg>
+            {pondo ? "Pondo na lista…" : "Pôr na lista de compras"}
+          </button>
+        )}
+      </div>
+
       {fator !== 1 && (
-        <p className="mt-4 text-sm text-tinta-suave">
+        <p className="mt-4 text-sm text-tinta-suave print:hidden">
           <span className={COR[secao]}>Quantidades recalculadas.</span> O modo de preparo continua com as medidas
           originais.{" "}
           <button

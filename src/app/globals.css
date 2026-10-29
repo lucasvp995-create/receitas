@@ -59,3 +59,18 @@ body {
 .amassou {
   animation: amassar 0.4s ease-out;
 }
+
+/* Impressão: papel branco, margens de livro, sem sombras. */
+@page {
+  size: A4;
+  margin: 16mm 14mm;
+}
+@media print {
+  body {
+    background: white;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

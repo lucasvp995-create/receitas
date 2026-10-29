@@ -23,6 +23,16 @@ export default async function NovaReceitaPage({ searchParams }: PageProps<"/nova
         </span>
         <span className="caixa shrink-0 text-xs">Importar →</span>
       </Link>
+      <Link
+        href="/sugestoes"
+        className="-mt-4 mb-7 flex items-center justify-between gap-3 rounded-lg border border-borda px-4 py-3 hover:bg-papel-escuro"
+      >
+        <span>
+          <span className="block font-semibold">Sem ideia?</span>
+          <span className="text-sm text-tinta-suave">A IA sugere receitas novas pensando no gosto da família.</span>
+        </span>
+        <span className="caixa shrink-0 text-xs">Sugestões →</span>
+      </Link>
       <FormularioReceita membroId={membro.id} secaoInicial={typeof secao === "string" && eSecao(secao) ? secao : undefined} />
     </div>
   );
