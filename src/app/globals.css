@@ -1,21 +1,24 @@
 @import "tailwindcss";
 
+/* Midnight Amber + Earthy Paprika, sobre papel creme */
 @theme {
-  --color-papel: #f7f1e6;
-  --color-papel-claro: #fffbf4;
-  --color-papel-escuro: #ece2cf;
-  --color-borda: #e0d2ba;
-  --color-tinta: #2f2219;
-  --color-tinta-suave: #6e5c4d;
-  --color-capa: #4a2c1d;
-  --color-capa-escura: #36200f;
-  --color-dourado: #d9b56f;
-  --color-salgado: #b4532a;
-  --color-doce: #ad4468;
-  --color-bebidas: #2c6e74;
+  --color-papel: #fbf6ec;
+  --color-papel-claro: #fffdf8;
+  --color-papel-escuro: #f1e8d8;
+  --color-borda: #e4d9c5;
+  --color-tinta: #3b3e54;
+  --color-tinta-suave: #6b6e80;
+  --color-capa: #3b3e54;
+  --color-capa-escura: #2b2d3e;
+  --color-dourado: #d7a852;
+  --color-salgado: #cc6455;
+  --color-doce: #974b5b;
+  --color-bebidas: #4d8278;
 
-  --font-titulo: var(--font-fraunces), Georgia, serif;
-  --font-sans: var(--font-source-sans), system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-titulo: var(--font-jost), "Futura", system-ui, sans-serif;
+  --font-sans: var(--font-barlow), system-ui, sans-serif;
 }
 
 :root {
@@ -29,20 +32,19 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Textura leve de papel */
-.folha {
-  background-color: var(--color-papel-claro);
-  background-image: radial-gradient(rgb(110 92 77 / 0.05) 1px, transparent 1px);
-  background-size: 6px 6px;
+/* Títulos em caixa alta e espaçados, como nos livros de receita */
+.caixa {
+  font-family: var(--font-titulo);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
 }
 
-.capa-couro {
-  background-color: var(--color-capa);
-  background-image:
-    radial-gradient(circle at 20% 15%, rgb(255 255 255 / 0.07), transparent 45%),
-    radial-gradient(circle at 85% 90%, rgb(0 0 0 / 0.25), transparent 50%);
+/* Fios duplos entre colunas de ingredientes */
+.fio-duplo {
+  border-left: 3px double var(--color-salgado);
 }
 
 .campo {
-  @apply w-full rounded-lg border border-borda bg-papel-claro px-3 py-2.5 text-base text-tinta outline-none placeholder:text-tinta-suave/60 focus:border-tinta-suave focus:ring-2 focus:ring-dourado/40;
+  @apply w-full rounded-md border border-borda bg-papel-claro px-3 py-2.5 text-base text-tinta outline-none placeholder:text-tinta-suave/60 focus:border-tinta focus:ring-2 focus:ring-dourado/50;
 }

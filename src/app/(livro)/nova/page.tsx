@@ -10,8 +10,8 @@ export default async function NovaReceitaPage({ searchParams }: PageProps<"/nova
   const { secao } = await searchParams;
 
   return (
-    <div className="folha mx-auto max-w-2xl rounded-2xl border border-borda px-5 py-7 shadow-sm sm:px-10">
-      <h1 className="mb-6 font-titulo text-3xl font-semibold">Nova receita</h1>
+    <div className="bg-papel-claro mx-auto max-w-2xl rounded-2xl border border-borda px-5 py-7 shadow-sm sm:px-10">
+      <h1 className="caixa mb-6 text-2xl text-salgado">Nova receita</h1>
       <FormularioReceita membroId={membro.id} secaoInicial={typeof secao === "string" && eSecao(secao) ? secao : undefined} />
     </div>
   );

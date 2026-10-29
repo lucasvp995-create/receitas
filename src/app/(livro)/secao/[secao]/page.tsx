@@ -31,11 +31,11 @@ export default async function SecaoPage({ params, searchParams }: PageProps<"/se
 
   return (
     <div>
-      <p className="text-sm text-tinta-suave">
+      <p className="caixa text-xs text-tinta-suave">
         <Link href="/" className="hover:underline">Índice</Link> / Capítulo
       </p>
-      <h1 className={`font-titulo text-4xl font-semibold ${COR_TITULO[secao]}`}>{SECOES[secao].nome}</h1>
-      <p className="text-tinta-suave">{SECOES[secao].frase}</p>
+      <h1 className={`caixa mt-1 text-4xl sm:text-5xl ${COR_TITULO[secao]}`}>{SECOES[secao].nome}</h1>
+      <p className="mt-1 font-serif text-lg text-tinta-suave italic">{SECOES[secao].frase}</p>
 
       {paises.length > 0 && (
         <nav aria-label="Países" className="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-2">
@@ -58,7 +58,7 @@ export default async function SecaoPage({ params, searchParams }: PageProps<"/se
         {visiveis.length > 0 ? (
           <GradeReceitas receitas={visiveis} />
         ) : (
-          <div className="folha rounded-xl border border-dashed border-borda p-8 text-center">
+          <div className="bg-papel-claro rounded-md border border-dashed border-borda p-8 text-center">
             <p className="text-tinta-suave">Nenhuma receita aqui ainda.</p>
             <Link
               href={`/nova?secao=${secao}`}

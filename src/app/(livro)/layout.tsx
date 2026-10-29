@@ -10,8 +10,9 @@ export default async function LivroLayout({ children }: LayoutProps<"/">) {
     <>
       <header className="sticky top-0 z-20 border-b border-borda/80 bg-papel/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4">
-          <Link href="/" className="font-titulo text-xl font-semibold text-capa">
-            Receitas <span className="italic font-normal text-tinta-suave">da Família</span>
+          <Link href="/" className="flex items-baseline gap-2 text-tinta">
+            <span className="font-display text-2xl font-black" style={{ fontVariationSettings: '"SOFT" 100' }}>Receitas</span>
+            <span className="caixa hidden text-[0.7rem] text-tinta-suave min-[380px]:inline">da Família</span>
           </Link>
           <nav className="ml-auto flex items-center gap-1 sm:gap-2">
             <Link

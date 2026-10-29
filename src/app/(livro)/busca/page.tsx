@@ -11,7 +11,7 @@ export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
 
   return (
     <div>
-      <h1 className="font-titulo text-4xl font-semibold">Buscar</h1>
+      <h1 className="caixa text-3xl">Buscar</h1>
       <form action="/busca" className="mt-4 flex gap-2">
         <input
           name="q"

@@ -12,8 +12,8 @@ export default async function EditarReceitaPage({ params }: PageProps<"/receita/
   if (receita.autor_id !== membro.id) redirect(`/receita/${id}`);
 
   return (
-    <div className="folha mx-auto max-w-2xl rounded-2xl border border-borda px-5 py-7 shadow-sm sm:px-10">
-      <h1 className="mb-6 font-titulo text-3xl font-semibold">Editar receita</h1>
+    <div className="bg-papel-claro mx-auto max-w-2xl rounded-2xl border border-borda px-5 py-7 shadow-sm sm:px-10">
+      <h1 className="caixa mb-6 text-2xl text-salgado">Editar receita</h1>
       <FormularioReceita membroId={membro.id} receita={receita} />
     </div>
   );

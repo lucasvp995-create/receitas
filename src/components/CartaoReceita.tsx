@@ -13,7 +13,7 @@ export function CartaoReceita({ receita }: { receita: ResumoReceita }) {
   return (
     <Link
       href={`/receita/${receita.id}`}
-      className="group overflow-hidden rounded-xl border border-borda bg-papel-claro shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+      className="group overflow-hidden rounded-md border border-borda bg-papel-claro transition hover:-translate-y-0.5 hover:border-tinta/30 hover:shadow-md"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         {receita.foto_capa ? (
@@ -25,13 +25,16 @@ export function CartaoReceita({ receita }: { receita: ResumoReceita }) {
             className="object-cover transition duration-300 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className={`flex h-full items-center justify-center font-titulo text-5xl ${FUNDO_SEM_FOTO[receita.secao]}`}>
+          <div
+            className={`flex h-full items-center justify-center font-display text-6xl font-black ${FUNDO_SEM_FOTO[receita.secao]}`}
+            style={{ fontVariationSettings: '"SOFT" 100' }}
+          >
             {receita.titulo.charAt(0).toUpperCase()}
           </div>
         )}
       </div>
       <div className="p-3">
-        <h3 className="font-titulo text-lg font-semibold leading-snug">{receita.titulo}</h3>
+        <h3 className="caixa text-[0.95rem] leading-snug">{receita.titulo}</h3>
         <p className="mt-1 text-sm text-tinta-suave">
           {bandeira(receita.pais)} {receita.pais}
           {receita.categoria ? ` · ${receita.categoria}` : ` · ${SECOES[receita.secao].nome}`}
@@ -49,5 +52,15 @@ export function GradeReceitas({ receitas }: { receitas: ResumoReceita[] }) {
         <CartaoReceita key={receita.id} receita={receita} />
       ))}
     </div>
+  );
+}
+
+// Um subtítulo de seção com um fio fino, como nos livros.
+export function Subtitulo({ id, children }: { id?: string; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className="caixa mb-4 flex items-center gap-3 text-sm text-tinta-suave">
+      {children}
+      <span className="h-px flex-1 bg-borda" aria-hidden />
+    </h2>
   );
 }

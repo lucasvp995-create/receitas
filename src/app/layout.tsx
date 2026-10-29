@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { Barlow, Fraunces, Jost } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
-const sourceSans = Source_Sans_3({ variable: "--font-source-sans", subsets: ["latin"] });
+// Serifa encorpada para capa e textos, caixa alta geométrica para títulos, sans limpa para receitas
+const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], axes: ["SOFT", "opsz"] });
+const jost = Jost({ variable: "--font-jost", subsets: ["latin"] });
+const barlow = Barlow({ variable: "--font-barlow", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
   title: { default: "Receitas da Família", template: "%s · Receitas da Família" },
@@ -13,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4a2c1d",
+  themeColor: "#d7a852",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${fraunces.variable} ${sourceSans.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${fraunces.variable} ${jost.variable} ${barlow.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
