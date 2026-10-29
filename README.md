@@ -18,12 +18,22 @@ Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, 
 - **Import with AI** (`/importar`): paste a recipe link (any blog, any language), a YouTube video, up to 4 photos of a cookbook or handwritten page, or pasted text such as an Instagram caption. Claude rewrites it in Brazilian Portuguese with metric units, picks the chapter and country, and you review everything in the normal form before saving. Imported recipes are marked "Importada" and keep the source link.
 - **Adjust servings** on every recipe page: − / + recalculates the ingredient quantities (fractions like ½ included). Recipes without a serving count scale by half, double, triple…
 
+## What's in phase 3
+
+- **Fiz essa receita!**: anyone can post a photo of how the dish turned out, with a note. These show under each recipe in "Na cozinha da família" and on the home page.
+- **Amassava!** instead of a like button, on recipes and on each family photo, showing who amassou ("Você, Ana e mais 1 amassavam").
+- **Conversa**: comments at the bottom of each recipe.
+- **Quero fazer**: a personal bookmark list (only you see yours), in the avatar menu.
+- **Meu perfil**: change your name and avatar (Google photo, your own photo, or one of 8 food drawings).
+
+Run `supabase/migrations/0002_familia.sql` in the Supabase SQL Editor after `0001` (once).
+
 ## Setup (one time, about 20 minutes)
 
 ### 1. Supabase
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste the whole of [`supabase/migrations/0001_livro.sql`](supabase/migrations/0001_livro.sql) and run it.
+2. Open **SQL Editor**, paste the whole of [`supabase/migrations/0001_livro.sql`](supabase/migrations/0001_livro.sql) and run it, then do the same with [`0002_familia.sql`](supabase/migrations/0002_familia.sql).
 3. Still in the SQL Editor, invite the family (use the Google e-mails, in lowercase):
 
    ```sql
@@ -74,6 +84,8 @@ Add `http://localhost:3000/auth/callback` to Supabase's Redirect URLs to log in 
 | `src/lib/dados.ts` | Reading from the database (server only) |
 | `src/lib/acoes.ts` | Saving, editing, deleting, importing, signing out |
 | `src/lib/importar.ts` | Reads a site, YouTube video, photos or text and asks Claude for the recipe in the book's format |
+| `src/components/Familia.tsx` | Family photos and comments on the recipe page |
+| `src/components/Ilustracoes.tsx` | The illustrated food avatars |
 | `src/lib/porcoes.ts` | Scales ingredient quantities for the servings adjuster |
 | `src/app/(livro)/` | The book's pages: index, chapter, recipe, new, edit, search |
 | `src/app/login`, `src/app/auth/callback` | Google login and the invite check |
@@ -81,5 +93,4 @@ Add `http://localhost:3000/auth/callback` to Supabase's Redirect URLs to log in 
 
 ## Next phases
 
-3. Family: "minha versão" photos, likes, comments, favorites
 4. Recipe suggestions, Instagram/TikTok import, shopping list, print the book

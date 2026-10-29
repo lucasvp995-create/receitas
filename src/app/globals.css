@@ -48,3 +48,14 @@ body {
 .campo {
   @apply w-full rounded-md border border-borda bg-papel-claro px-3 py-2.5 text-base text-tinta outline-none placeholder:text-tinta-suave/60 focus:border-tinta focus:ring-2 focus:ring-dourado/50;
 }
+
+/* O botão Amassava! dá uma amassadinha quando ligado. */
+@keyframes amassar {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18, 0.82); }
+  70% { transform: scale(0.95, 1.06); }
+  100% { transform: scale(1); }
+}
+.amassou {
+  animation: amassar 0.4s ease-out;
+}

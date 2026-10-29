@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotaoAmassava } from "@/components/BotaoAmassava";
 import { BotaoApagar } from "@/components/BotaoApagar";
+import { BotaoFavorito } from "@/components/BotaoFavorito";
+import { ConversaDaReceita, NaCozinhaDaFamilia, nomesDe } from "@/components/Familia";
 import { ListaIngredientes } from "@/components/ListaIngredientes";
-import { getMembro, getReceita } from "@/lib/dados";
+import { getFamiliaDaReceita, getMembro, getReceita } from "@/lib/dados";
 import { bandeira, DIFICULDADES, formatarTempo, ORIGENS, SECOES } from "@/lib/livro";
 
 const COR = { salgado: "text-salgado", doce: "text-doce", bebidas: "text-bebidas" };
@@ -30,8 +33,9 @@ function Introducao({ texto, cor }: { texto: string; cor: string }) {
 
 export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">) {
   const { id } = await params;
-  const [membro, receita] = await Promise.all([getMembro(), getReceita(id)]);
+  const [membro, receita, familia] = await Promise.all([getMembro(), getReceita(id), getFamiliaDaReceita(id)]);
   if (!receita) notFound();
+  const amassaram = nomesDe(familia.amassavas, membro.id);
 
   const cor = COR[receita.secao];
   const tempo = formatarTempo(receita.tempo_minutos);
@@ -47,6 +51,7 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
   });
 
   return (
+    <>
     <article className="mx-auto max-w-4xl overflow-hidden rounded-md border border-borda bg-papel-claro shadow-[0_10px_30px_-18px_rgb(43_45_62/0.35)]">
       {receita.foto_capa && (
         <div className="relative aspect-[16/10] sm:aspect-[16/8]">
@@ -63,6 +68,10 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
         <p className="caixa mt-4 text-center text-xs text-tinta-suave">
           {detalhes.join("  ·  ")}
         </p>
+        <div className="mt-5 flex flex-col items-center gap-3">
+          <BotaoAmassava receitaId={receita.id} alvo={{ receita_id: receita.id }} nomes={amassaram.outros} eu={amassaram.eu} />
+          <BotaoFavorito receitaId={receita.id} favorito={familia.favorito} />
+        </div>
 
         <section className="mt-10" aria-label="Ingredientes">
           <ListaIngredientes ingredientes={receita.ingredientes} secao={receita.secao} porcoes={receita.porcoes} />
@@ -117,5 +126,9 @@ export default async function ReceitaPage({ params }: PageProps<"/receita/[id]">
         </footer>
       </div>
     </article>
+
+    <NaCozinhaDaFamilia receitaId={receita.id} membro={membro} versoes={familia.versoes} />
+    <ConversaDaReceita receitaId={receita.id} membroId={membro.id} comentarios={familia.comentarios} />
+    </>
   );
 }

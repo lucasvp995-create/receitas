@@ -2,7 +2,16 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { semAcento, type Receita, type ResumoReceita, type Secao } from "@/lib/livro";
+import {
+  semAcento,
+  type Comentario,
+  type Pessoa,
+  type Receita,
+  type ResumoReceita,
+  type Secao,
+  type Versao,
+  type VersaoRecente,
+} from "@/lib/livro";
 
 const CAMPOS_RESUMO = "id, titulo, secao, pais, categoria, tempo_minutos, foto_capa";
 
@@ -72,4 +81,60 @@ export async function getReceita(id: string) {
     .eq("id", id)
     .maybeSingle();
   return data as Receita | null;
+}
+
+const PESSOA = "autor:perfis(nome, avatar_url)";
+
+// Tudo o que a família fez em volta de uma receita: versões, amassavas, comentários.
+export async function getFamiliaDaReceita(receitaId: string) {
+  const supabase = await createClient();
+  const [versoes, amassavas, comentarios, favorito] = await Promise.all([
+    supabase
+      .from("versoes")
+      .select(`id, foto_url, recado, criado_em, autor_id, ${PESSOA}, amassavas(autor_id, ${PESSOA})`)
+      .eq("receita_id", receitaId)
+      .order("criado_em", { ascending: false }),
+    supabase.from("amassavas").select(`autor_id, ${PESSOA}`).eq("receita_id", receitaId).order("criado_em"),
+    supabase
+      .from("comentarios")
+      .select(`id, texto, criado_em, autor_id, ${PESSOA}`)
+      .eq("receita_id", receitaId)
+      .order("criado_em"),
+    supabase.from("favoritos").select("receita_id").eq("receita_id", receitaId).maybeSingle(),
+  ]);
+  return {
+    versoes: (versoes.data ?? []) as unknown as Versao[],
+    amassavas: (amassavas.data ?? []) as unknown as { autor_id: string; autor: Pessoa | null }[],
+    comentarios: (comentarios.data ?? []) as unknown as Comentario[],
+    favorito: Boolean(favorito.data),
+  };
+}
+
+export async function versoesRecentes(limite = 8) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("versoes")
+    .select(`id, foto_url, criado_em, ${PESSOA}, receita:receitas(id, titulo, secao)`)
+    .order("criado_em", { ascending: false })
+    .limit(limite);
+  return (data ?? []) as unknown as VersaoRecente[];
+}
+
+export async function receitasFavoritas() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("favoritos")
+    .select(`receita:receitas(${CAMPOS_RESUMO})`)
+    .order("criado_em", { ascending: false });
+  return ((data ?? []) as unknown as { receita: ResumoReceita | null }[])
+    .map((linha) => linha.receita)
+    .filter((receita): receita is ResumoReceita => Boolean(receita));
+}
+
+// A foto da conta Google, para poder voltar a ela no perfil.
+export async function fotoDoGoogle() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const metadados = (data?.claims?.user_metadata ?? {}) as { avatar_url?: string; picture?: string };
+  return metadados.avatar_url ?? metadados.picture ?? null;
 }

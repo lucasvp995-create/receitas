@@ -108,3 +108,53 @@ export function eSubtitulo(linha: string) {
 export function semAcento(texto: string) {
   return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
+
+// A família no livro (fase 3) ---------------------------------------------------
+
+export type Pessoa = { nome: string; avatar_url: string | null };
+
+export type Versao = {
+  id: string;
+  foto_url: string;
+  recado: string | null;
+  criado_em: string;
+  autor_id: string;
+  autor: Pessoa | null;
+  amassavas: { autor_id: string; autor: Pessoa | null }[];
+};
+
+export type Comentario = {
+  id: string;
+  texto: string;
+  criado_em: string;
+  autor_id: string;
+  autor: Pessoa | null;
+};
+
+export type VersaoRecente = {
+  id: string;
+  foto_url: string;
+  criado_em: string;
+  autor: Pessoa | null;
+  receita: { id: string; titulo: string; secao: Secao } | null;
+};
+
+export function primeiroNome(pessoa: Pessoa | null | undefined) {
+  return pessoa?.nome.split(" ")[0] ?? "Alguém";
+}
+
+// "Lucas amassava", "Lucas e Ana amassavam", "Lucas, Ana e mais 2 amassavam".
+export function quemAmassou(nomes: string[]) {
+  if (nomes.length === 0) return "";
+  if (nomes.length === 1) return `${nomes[0]} amassava`;
+  if (nomes.length === 2) return `${nomes[0]} e ${nomes[1]} amassavam`;
+  return `${nomes[0]}, ${nomes[1]} e mais ${nomes.length - 2} amassavam`;
+}
+
+export function quando(data: string) {
+  const dias = Math.floor((Date.now() - new Date(data).getTime()) / 86_400_000);
+  if (dias <= 0) return "hoje";
+  if (dias === 1) return "ontem";
+  if (dias < 7) return `há ${dias} dias`;
+  return new Date(data).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+}

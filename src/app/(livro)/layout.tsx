@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { getMembro } from "@/lib/dados";
 import { sair } from "@/lib/acoes";
 
@@ -33,16 +33,19 @@ export default async function LivroLayout({ children }: LayoutProps<"/">) {
             </Link>
             <details className="relative">
               <summary className="list-none cursor-pointer rounded-full p-0.5 [&::-webkit-details-marker]:hidden" aria-label="Conta">
-                {membro.avatar_url ? (
-                  <Image src={membro.avatar_url} alt="" width={32} height={32} className="h-8 w-8 rounded-full" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-dourado font-semibold text-capa">
-                    {membro.nome.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <Avatar pessoa={membro} tamanho={32} />
               </summary>
               <div className="absolute right-0 mt-2 w-48 rounded-xl border border-borda bg-papel-claro p-2 shadow-lg">
                 <p className="truncate px-2 py-1.5 text-sm font-semibold">{membro.nome}</p>
+                <Link href="/perfil" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
+                  Meu perfil
+                </Link>
+                <Link href="/favoritas" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
+                  Quero fazer
+                </Link>
+                <Link href="/importar" className="block rounded-lg px-2 py-1.5 text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
+                  Importar receita
+                </Link>
                 <form action={sair}>
                   <button className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-tinta-suave hover:bg-papel-escuro hover:text-tinta">
                     Sair
