@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Capa } from "@/components/Capa";
 import { GradeReceitas, Subtitulo } from "@/components/CartaoReceita";
-import { contarPorSecao, receitasRecentes } from "@/lib/dados";
+import { CozinhaRecente } from "@/components/CozinhaRecente";
+import { contarPorSecao, receitasRecentes, versoesRecentes } from "@/lib/dados";
 import { SECOES, type Secao } from "@/lib/livro";
 
 const ABA = {
@@ -11,7 +12,7 @@ const ABA = {
 };
 
 export default async function IndicePage() {
-  const [contagem, recentes] = await Promise.all([contarPorSecao(), receitasRecentes()]);
+  const [contagem, recentes, cozinha] = await Promise.all([contarPorSecao(), receitasRecentes(), versoesRecentes()]);
   const total = contagem.salgado + contagem.doce + contagem.bebidas;
 
   return (
@@ -40,6 +41,13 @@ export default async function IndicePage() {
           ))}
         </div>
       </section>
+
+      {cozinha.length > 0 && (
+        <section aria-labelledby="cozinha">
+          <Subtitulo id="cozinha">Na cozinha da família</Subtitulo>
+          <CozinhaRecente versoes={cozinha} />
+        </section>
+      )}
 
       <section aria-labelledby="recentes">
         <Subtitulo id="recentes">Adicionadas recentemente</Subtitulo>

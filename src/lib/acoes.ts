@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getMembro } from "@/lib/dados";
 import { createClient } from "@/lib/supabase/server";
+import { eIlustracao } from "@/components/Ilustracoes";
 import { ErroImportacao, lerReceita, type Entrada } from "@/lib/importar";
 import { DIFICULDADES, eSecao, type Rascunho } from "@/lib/livro";
 
@@ -143,6 +144,92 @@ export async function apagarReceita(id: string) {
   await supabase.from("receitas").delete().eq("id", id);
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+// A família no livro -----------------------------------------------------------
+
+export type Alvo = { receita_id: string } | { versao_id: string };
+
+export async function alternarAmassava(receitaId: string, alvo: Alvo, ligar: boolean) {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  if (ligar) {
+    await supabase.from("amassavas").insert({ ...alvo, autor_id: membro.id });
+  } else {
+    const [coluna, id] = Object.entries(alvo)[0];
+    await supabase.from("amassavas").delete().eq(coluna, id).eq("autor_id", membro.id);
+  }
+  revalidatePath(`/receita/${receitaId}`);
+}
+
+export async function postarVersao(receitaId: string, fotoUrl: string, recado: string): Promise<ResultadoSalvar> {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  const { error } = await supabase.from("versoes").insert({
+    receita_id: receitaId,
+    autor_id: membro.id,
+    foto_url: fotoUrl,
+    recado: recado.trim().slice(0, 1000) || null,
+  });
+  if (error) return { erro: "Não consegui postar. Tente de novo." };
+  revalidatePath("/", "layout");
+}
+
+export async function apagarVersao(receitaId: string, versaoId: string, fotoUrl: string) {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  const { data } = await supabase.from("versoes").delete().eq("id", versaoId).eq("autor_id", membro.id).select("id");
+  const caminho = fotoUrl.split("/storage/v1/object/public/fotos/")[1];
+  if (data?.length && caminho) await supabase.storage.from("fotos").remove([caminho]);
+  revalidatePath("/", "layout");
+  revalidatePath(`/receita/${receitaId}`);
+}
+
+export async function comentar(receitaId: string, texto: string): Promise<ResultadoSalvar> {
+  const membro = await getMembro();
+  const limpo = texto.trim();
+  if (!limpo) return { erro: "Escreva alguma coisa." };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("comentarios")
+    .insert({ receita_id: receitaId, autor_id: membro.id, texto: limpo.slice(0, 2000) });
+  if (error) return { erro: "Não consegui enviar. Tente de novo." };
+  revalidatePath(`/receita/${receitaId}`);
+}
+
+export async function apagarComentario(receitaId: string, comentarioId: string) {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  await supabase.from("comentarios").delete().eq("id", comentarioId).eq("autor_id", membro.id);
+  revalidatePath(`/receita/${receitaId}`);
+}
+
+export async function alternarFavorito(receitaId: string, ligar: boolean) {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  if (ligar) await supabase.from("favoritos").insert({ receita_id: receitaId, perfil_id: membro.id });
+  else await supabase.from("favoritos").delete().eq("receita_id", receitaId).eq("perfil_id", membro.id);
+  revalidatePath(`/receita/${receitaId}`);
+  revalidatePath("/favoritas");
+}
+
+export async function salvarPerfil(nome: string, avatar: string | null): Promise<ResultadoSalvar> {
+  const membro = await getMembro();
+  const limpo = nome.trim().slice(0, 60);
+  if (!limpo) return { erro: "Escreva seu nome." };
+
+  const ilustracao = avatar?.match(/^ilustracao:([a-z]+)$/)?.[1];
+  const valido =
+    avatar === null ||
+    (ilustracao && eIlustracao(ilustracao)) ||
+    /^https:\/\/lh3\.googleusercontent\.com\//.test(avatar) ||
+    avatar.includes(`/storage/v1/object/public/fotos/${membro.id}/`);
+  if (!valido) return { erro: "Escolha outro avatar." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("perfis").update({ nome: limpo, avatar_url: avatar }).eq("id", membro.id);
+  if (error) return { erro: "Não consegui salvar. Tente de novo." };
+  revalidatePath("/", "layout");
 }
 
 export async function sair() {
