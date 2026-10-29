@@ -158,3 +158,11 @@ export function quando(data: string) {
   if (dias < 7) return `há ${dias} dias`;
   return new Date(data).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
 }
+
+export type ItemCompra = {
+  id: string;
+  texto: string;
+  receita_id: string | null;
+  receita_titulo: string | null;
+  feito: boolean;
+};

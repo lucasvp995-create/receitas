@@ -28,12 +28,21 @@ Built with Next.js 16 (installable as a PWA), Supabase (Google login, Postgres, 
 
 Run `supabase/migrations/0002_familia.sql` in the Supabase SQL Editor after `0001` (once).
 
+## What's in phase 4
+
+- **Sugestões da IA** (`/sugestoes`): tell it what you feel like (or nothing) and Claude suggests 3 new, complete recipes, avoiding what's already in the book and leaning on what the family amassou most. Pick one, review it, and save it ("Sugerida pelo livro").
+- **Lista de compras** (`/compras`): on any recipe, "Pôr na lista de compras" adds the ingredients in the portions you chose. Tick items off, add your own, and copy the list for WhatsApp. Each person has their own list.
+- **Imprimir**: a print button on every recipe, and `/imprimir` for the whole book (or one chapter) with cover, contents and one recipe per page. Choose "Save as PDF" to keep or share it.
+- **Instagram and TikTok links** in Importar: the AI reads the post caption and cover image. Recipes that are only spoken in the video can't be read yet; paste the text or send a screenshot instead.
+
+Run `supabase/migrations/0003_compras.sql` in the Supabase SQL Editor (once).
+
 ## Setup (one time, about 20 minutes)
 
 ### 1. Supabase
 
 1. Create a free project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste the whole of [`supabase/migrations/0001_livro.sql`](supabase/migrations/0001_livro.sql) and run it, then do the same with [`0002_familia.sql`](supabase/migrations/0002_familia.sql).
+2. Open **SQL Editor**, paste the whole of [`supabase/migrations/0001_livro.sql`](supabase/migrations/0001_livro.sql) and run it, then do the same with [`0002_familia.sql`](supabase/migrations/0002_familia.sql) and [`0003_compras.sql`](supabase/migrations/0003_compras.sql).
 3. Still in the SQL Editor, invite the family (use the Google e-mails, in lowercase):
 
    ```sql
@@ -86,11 +95,13 @@ Add `http://localhost:3000/auth/callback` to Supabase's Redirect URLs to log in 
 | `src/lib/importar.ts` | Reads a site, YouTube video, photos or text and asks Claude for the recipe in the book's format |
 | `src/components/Familia.tsx` | Family photos and comments on the recipe page |
 | `src/components/Ilustracoes.tsx` | The illustrated food avatars |
+| `src/lib/sugerir.ts` | Asks Claude for new recipe suggestions |
+| `src/components/ReceitaImpressa.tsx` | A recipe laid out as a printed book page |
 | `src/lib/porcoes.ts` | Scales ingredient quantities for the servings adjuster |
 | `src/app/(livro)/` | The book's pages: index, chapter, recipe, new, edit, search |
 | `src/app/login`, `src/app/auth/callback` | Google login and the invite check |
 | `src/proxy.ts` | Keeps the session fresh and sends logged-out visitors to `/login` |
 
-## Next phases
+## Ideas for later
 
-4. Recipe suggestions, Instagram/TikTok import, shopping list, print the book
+Weekly menu planner, reading recipes that are only spoken in videos, an own domain.

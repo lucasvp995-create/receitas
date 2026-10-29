@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   semAcento,
   type Comentario,
+  type ItemCompra,
   type Pessoa,
   type Receita,
   type ResumoReceita,
@@ -137,4 +138,43 @@ export async function fotoDoGoogle() {
   const { data } = await supabase.auth.getClaims();
   const metadados = (data?.claims?.user_metadata ?? {}) as { avatar_url?: string; picture?: string };
   return metadados.avatar_url ?? metadados.picture ?? null;
+}
+
+// O que o livro já tem e o que a família mais amassou, para orientar as sugestões.
+export async function gostoDaFamilia() {
+  const supabase = await createClient();
+  const [receitas, amassavas] = await Promise.all([
+    supabase.from("receitas").select("id, titulo").order("criado_em", { ascending: false }).limit(300),
+    supabase.from("amassavas").select("receita_id").not("receita_id", "is", null),
+  ]);
+  const titulos = new Map((receitas.data ?? []).map((r) => [r.id as string, r.titulo as string]));
+  const contagem = new Map<string, number>();
+  for (const { receita_id } of amassavas.data ?? []) {
+    contagem.set(receita_id, (contagem.get(receita_id) ?? 0) + 1);
+  }
+  const favoritas = [...contagem.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([id]) => titulos.get(id))
+    .filter((titulo): titulo is string => Boolean(titulo));
+  return { noLivro: [...titulos.values()], favoritas };
+}
+
+export async function listaDeCompras() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("compras")
+    .select("id, texto, receita_id, receita_titulo, feito")
+    .order("criado_em");
+  return (data ?? []) as ItemCompra[];
+}
+
+// O livro inteiro (ou um capítulo) para imprimir, na ordem do sumário.
+export async function receitasParaImprimir(secao: Secao | null) {
+  const supabase = await createClient();
+  let consulta = supabase.from("receitas").select("*, autor:perfis(nome, avatar_url)");
+  if (secao) consulta = consulta.eq("secao", secao);
+  const { data } = await consulta.order("titulo");
+  const ordem = { salgado: 0, doce: 1, bebidas: 2 };
+  return ((data ?? []) as Receita[]).sort((a, b) => ordem[a.secao] - ordem[b.secao]);
 }

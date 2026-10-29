@@ -53,6 +53,8 @@ function textoDoHtml(html: string) {
     .replace(/<(script|style|noscript|svg|nav|footer|header|form|iframe)\b[\s\S]*?<\/\1>/gi, " ")
     .replace(/<br\s*\/?>|<\/(p|li|h[1-6]|div|tr)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, decimal) => String.fromCodePoint(Number(decimal)))
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
@@ -216,6 +218,74 @@ async function lerSite(url: URL) {
     .join("\n\n");
 }
 
+// Instagram e TikTok: a legenda do post e a imagem de capa (muita gente põe a receita
+// escrita na capa). A receita só falada no vídeo ainda fica de fora.
+export function eRedeSocial(url: URL) {
+  return /(^|\.)(instagram\.com|tiktok\.com)$/.test(url.hostname);
+}
+
+type Post = { texto: string; imagem: string | null };
+
+function meta(html: string, nome: string) {
+  const valor =
+    html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${nome}["'][^>]+content=["']([^"']*)["']`, "i"))?.[1] ??
+    html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${nome}["']`, "i"))?.[1];
+  return valor ? textoDoHtml(valor) : null;
+}
+
+async function lerTiktok(url: URL): Promise<Post | null> {
+  const resposta = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url.toString())}`, {
+    signal: AbortSignal.timeout(10_000),
+  }).catch(() => null);
+  const dados = resposta?.ok ? await resposta.json().catch(() => null) : null;
+  if (!dados?.title) return null;
+  return { texto: `Post do TikTok de ${dados.author_name ?? "?"}:\n${dados.title}`, imagem: dados.thumbnail_url ?? null };
+}
+
+async function lerInstagram(url: URL): Promise<Post | null> {
+  // O Instagram mostra a legenda nas etiquetas de pré-visualização de links.
+  const resposta = await fetch(url.toString(), {
+    headers: { "User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(15_000),
+  }).catch(() => null);
+  if (!resposta?.ok) return null;
+  const html = await resposta.text();
+  const legenda = meta(html, "og:description") ?? meta(html, "description");
+  if (!legenda) return null;
+  return {
+    texto: `Post do Instagram: ${meta(html, "og:title") ?? ""}\nLegenda:\n${legenda}`,
+    imagem: meta(html, "og:image"),
+  };
+}
+
+async function imagemEmBase64(endereco: string | null) {
+  if (!endereco) return null;
+  const resposta = await fetch(endereco, { signal: AbortSignal.timeout(10_000) }).catch(() => null);
+  const tipo = resposta?.headers.get("content-type") ?? "";
+  if (!resposta?.ok || !/^image\/(jpeg|png|webp|gif)/.test(tipo)) return null;
+  const dados = Buffer.from(await resposta.arrayBuffer());
+  if (dados.length > 4_000_000) return null;
+  return { media_type: tipo.split(";")[0] as "image/jpeg" | "image/png" | "image/webp" | "image/gif", data: dados.toString("base64") };
+}
+
+async function lerRedeSocial(url: URL): Promise<Anthropic.Beta.BetaContentBlockParam[]> {
+  const post = url.hostname.endsWith("tiktok.com") ? await lerTiktok(url) : await lerInstagram(url);
+  if (!post) {
+    throw new ErroImportacao(
+      "Não consegui abrir esse post (ele pode ser privado). Copie a legenda e use a aba Texto, ou mande um print na aba Foto.",
+    );
+  }
+  const imagem = await imagemEmBase64(post.imagem);
+  return [
+    ...(imagem ? [{ type: "image" as const, source: { type: "base64" as const, ...imagem } }] : []),
+    {
+      type: "text",
+      text: `Fonte: ${url}\n\n${post.texto}${imagem ? "\n\nA imagem é a capa do post; ela pode ter a receita escrita." : ""}`,
+    },
+  ];
+}
+
 export type Entrada =
   | { tipo: "link"; url: string }
   | { tipo: "fotos"; imagens: string[] }
@@ -228,11 +298,15 @@ export async function lerReceita(entrada: Entrada): Promise<Rascunho> {
   if (entrada.tipo === "link") {
     const url = verificarLink(entrada.url);
     fonte = url.toString();
-    const texto = eYoutube(url) ? await lerYoutube(url) : await lerSite(url);
-    if (texto.length > LIMITE_TEXTO) {
-      throw new ErroImportacao("Essa página é grande demais para ler. Tente uma foto ou cole só o trecho da receita.");
+    if (eRedeSocial(url)) {
+      conteudo = await lerRedeSocial(url);
+    } else {
+      const texto = eYoutube(url) ? await lerYoutube(url) : await lerSite(url);
+      if (texto.length > LIMITE_TEXTO) {
+        throw new ErroImportacao("Essa página é grande demais para ler. Tente uma foto ou cole só o trecho da receita.");
+      }
+      conteudo = [{ type: "text", text: `Fonte: ${fonte}\n\n${texto}` }];
     }
-    conteudo = [{ type: "text", text: `Fonte: ${fonte}\n\n${texto}` }];
   } else if (entrada.tipo === "fotos") {
     if (entrada.imagens.length === 0) throw new ErroImportacao("Escolha pelo menos uma foto.");
     conteudo = [
@@ -273,7 +347,7 @@ export async function lerReceita(entrada: Entrada): Promise<Rascunho> {
   if (!lida.encontrou_receita || lida.ingredientes.length === 0) {
     throw new ErroImportacao(
       entrada.tipo === "link"
-        ? "Não encontrei uma receita nesse link. Se ela está só falada no vídeo, cole a descrição ou tire foto."
+        ? "Não encontrei a receita nesse link. Se ela só aparece falada no vídeo, ainda não consigo ouvir: cole o texto ou mande um print."
         : "Não encontrei uma receita aqui. Confira se os ingredientes e o modo de preparo aparecem.",
     );
   }

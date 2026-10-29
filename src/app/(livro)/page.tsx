@@ -42,6 +42,17 @@ export default async function IndicePage() {
         </div>
       </section>
 
+      <section className="grid gap-3 sm:grid-cols-2" aria-label="Atalhos">
+        <Link href="/sugestoes" className="rounded-md border border-dourado bg-dourado/10 p-4 transition hover:bg-dourado/20">
+          <span className="caixa text-sm">Sem ideia para hoje?</span>
+          <span className="mt-1 block text-sm text-tinta-suave">Peça sugestões de receitas novas para a IA →</span>
+        </Link>
+        <Link href="/compras" className="rounded-md border border-borda bg-papel-claro p-4 transition hover:shadow-md">
+          <span className="caixa text-sm text-bebidas">Lista de compras</span>
+          <span className="mt-1 block text-sm text-tinta-suave">Os ingredientes que você separou para comprar →</span>
+        </Link>
+      </section>
+
       {cozinha.length > 0 && (
         <section aria-labelledby="cozinha">
           <Subtitulo id="cozinha">Na cozinha da família</Subtitulo>

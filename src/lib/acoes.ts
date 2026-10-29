@@ -3,10 +3,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getMembro } from "@/lib/dados";
+import { getMembro, gostoDaFamilia } from "@/lib/dados";
 import { createClient } from "@/lib/supabase/server";
 import { eIlustracao } from "@/components/Ilustracoes";
 import { ErroImportacao, lerReceita, type Entrada } from "@/lib/importar";
+import { sugerirReceitas, type Sugestao } from "@/lib/sugerir";
 import { DIFICULDADES, eSecao, type Rascunho } from "@/lib/livro";
 
 export type DadosReceita = {
@@ -92,7 +93,7 @@ export async function criarReceita(dados: DadosReceita): Promise<ResultadoSalvar
     .insert({
       ...validado.receita,
       autor_id: membro.id,
-      origem: dados.origem === "importada" ? "importada" : "familia",
+      origem: dados.origem === "importada" || dados.origem === "sugerida" ? dados.origem : "familia",
     })
     .select("id")
     .single();
@@ -135,6 +136,30 @@ export async function importarReceita(entrada: Entrada): Promise<ResultadoImport
       return { erro: "A IA está ocupada agora. Tente de novo em um minuto." };
     }
     return { erro: "Algo deu errado ao ler a receita. Tente de novo." };
+  }
+}
+
+export type ResultadoSugerir = { erro: string } | { sugestoes: Sugestao[] };
+
+export async function pedirSugestoes(pedido: string, secao: string): Promise<ResultadoSugerir> {
+  await getMembro();
+  try {
+    const gosto = await gostoDaFamilia();
+    const sugestoes = await sugerirReceitas({
+      pedido: pedido.slice(0, 500),
+      secao: eSecao(secao) ? secao : null,
+      ...gosto,
+    });
+    return { sugestoes };
+  } catch (erro) {
+    console.error("sugerir receitas", erro);
+    if (erro instanceof Anthropic.AuthenticationError) {
+      return { erro: "As sugestões por IA ainda não estão configuradas (falta a chave ANTHROPIC_API_KEY)." };
+    }
+    if (erro instanceof Anthropic.RateLimitError || erro instanceof Anthropic.InternalServerError) {
+      return { erro: "A IA está ocupada agora. Tente de novo em um minuto." };
+    }
+    return { erro: "Não consegui pensar em sugestões agora. Tente de novo." };
   }
 }
 
@@ -230,6 +255,35 @@ export async function salvarPerfil(nome: string, avatar: string | null): Promise
   const { error } = await supabase.from("perfis").update({ nome: limpo, avatar_url: avatar }).eq("id", membro.id);
   if (error) return { erro: "Não consegui salvar. Tente de novo." };
   revalidatePath("/", "layout");
+}
+
+// Lista de compras ---------------------------------------------------------------
+
+export async function porNaLista(receitaId: string | null, titulo: string | null, itens: string[]) {
+  const membro = await getMembro();
+  const linhas = itens.map((item) => item.trim().slice(0, 300)).filter(Boolean).slice(0, 80);
+  if (linhas.length === 0) return;
+  const supabase = await createClient();
+  await supabase.from("compras").insert(
+    linhas.map((texto) => ({ texto, perfil_id: membro.id, receita_id: receitaId, receita_titulo: titulo })),
+  );
+  revalidatePath("/compras");
+}
+
+export async function marcarCompra(id: string, feito: boolean) {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  await supabase.from("compras").update({ feito }).eq("id", id).eq("perfil_id", membro.id);
+  revalidatePath("/compras");
+}
+
+export async function limparCompras(soMarcados: boolean) {
+  const membro = await getMembro();
+  const supabase = await createClient();
+  let consulta = supabase.from("compras").delete().eq("perfil_id", membro.id);
+  if (soMarcados) consulta = consulta.eq("feito", true);
+  await consulta;
+  revalidatePath("/compras");
 }
 
 export async function sair() {

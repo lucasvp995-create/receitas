@@ -113,8 +113,8 @@ export function Importador({ membroId }: { membroId: string }) {
               autoFocus
             />
             <p className="mt-2 text-sm text-tinta-suave">
-              Blogs e sites de receita, em qualquer idioma, e vídeos do YouTube. Instagram e TikTok ainda não: copie a
-              legenda do post e use a aba Texto.
+              Blogs e sites de receita em qualquer idioma, vídeos do YouTube e posts do Instagram e do TikTok (a IA lê a
+              legenda e a capa do post).
             </p>
           </>
         )}
